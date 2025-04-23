@@ -1,5 +1,3 @@
-if true then return {} end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
 -- AstroLSP allows you to customize the features in AstroNvim's LSP configuration engine
 -- Configuration documentation can be found with `:h astrolsp`
 
@@ -46,6 +44,15 @@ return {
     },
     -- customize how language servers are attached
     handlers = {
+      jdtls = function(_, opts)
+        require("lspconfig").jdtls.setup(vim.tbl_deep_extend("force", opts, {
+          settings = {
+            java = {
+              home = "/usr/lib/jvm/java-21-openjdk", -- Ensure this is the correct path
+            },
+          },
+        }))
+      end,
       -- a function without a key is simply the default handler, functions take two parameters, the server name and the configured options table for that server
       -- function(server, opts) require("lspconfig")[server].setup(opts) end
 

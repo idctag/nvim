@@ -1,4 +1,3 @@
-
 -- AstroCommunity: import any community modules here
 -- We import this file in `lazy_setup.lua` before the `plugins/` folder.
 -- This guarantees that the specs are processed before any user plugins.
@@ -10,5 +9,7 @@ return {
   { import = "astrocommunity.markdown-and-latex.markdown-preview-nvim" },
   { import = "astrocommunity.pack.go" },
   { import = "astrocommunity.pack.full-dadbod" },
+  { import = "astrocommunity.motion.mini-move" },
+  -- { import = "astrocommunity.pack.java" },
   -- import/override with your plugins folder
 }

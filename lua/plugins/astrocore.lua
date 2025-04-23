@@ -58,7 +58,10 @@ return {
         -- navigate buffer tabs
         ["L"] = { function() require("astrocore.buffer").nav(vim.v.count1) end, desc = "Next buffer" },
         ["H"] = { function() require("astrocore.buffer").nav(-vim.v.count1) end, desc = "Previous buffer" },
-
+        ["<leader>da"] = {
+          ":DBUIToggle<CR>",
+          desc = "Toggle DBUI",
+        },
         -- mappings seen under group name "Buffer"
         ["<Leader>bd"] = {
           function()
