@@ -7,11 +7,7 @@ if not (vim.env.LAZY or (vim.uv or vim.loop).fs_stat(lazypath)) then
 end
 
 vim.opt.rtp:prepend(lazypath)
-vim.o.scrolloff = 17
-
-vim.opt.tabstop = 2
-vim.opt.shiftwidth = 2
-vim.opt.expandtab = true
+vim.o.scrolloff = 100
 
 -- validate that lazy is available
 if not pcall(require, "lazy") then

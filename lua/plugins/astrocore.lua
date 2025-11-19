@@ -39,10 +39,12 @@ return {
     options = {
       opt = { -- vim.opt.<key>
         relativenumber = true, -- sets vim.opt.relativenumber
-        number = true, -- sets vim.opt.number
         spell = false, -- sets vim.opt.spell
         signcolumn = "yes", -- sets vim.opt.signcolumn to yes
-        wrap = false, -- sets vim.opt.wrap
+        wrap = true, -- sets vim.opt.wrap
+        tabstop = 2,
+        shiftwidth = 2,
+        expandtab = true,
       },
       g = { -- vim.g.<key>
         -- configure global vim variables (vim.g)
@@ -60,10 +62,6 @@ return {
         -- navigate buffer tabs
         ["L"] = { function() require("astrocore.buffer").nav(vim.v.count1) end, desc = "Next buffer" },
         ["H"] = { function() require("astrocore.buffer").nav(-vim.v.count1) end, desc = "Previous buffer" },
-        ["<leader>da"] = {
-          ":DBUIToggle<CR>",
-          desc = "Toggle DBUI",
-        },
         -- mappings seen under group name "Buffer"
         ["<Leader>bd"] = {
           function()
