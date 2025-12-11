@@ -1,59 +1,62 @@
----@type LazySpec
 return {
-  {
-    "williamboman/mason-lspconfig.nvim",
-    opts = function(_, opts)
-      local root_has_biome = vim.fs.find("biome.json", { upward = true })[1] ~= nil
-      if root_has_biome then
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "biome" })
-      end
-    end,
-  },
+  -- 1. CLEANUP: Ensure Biome binary is installed
   {
     "WhoIsSethDaniel/mason-tool-installer.nvim",
     optional = true,
     opts = function(_, opts)
-      local root_has_biome = vim.fs.find("biome.json", { upward = true })[1] ~= nil
-      if root_has_biome then
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "biome" })
-      end
+      -- We just ensure the binary exists. We don't configure logic here.
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "biome" })
     end,
   },
+
+  -- 2. DISABLE: Remove Biome from null-ls (It is not needed, Biome is an LSP)
   {
     "jay-babu/mason-null-ls.nvim",
     optional = true,
     opts = function(_, opts)
-      local root_has_biome = vim.fs.find("biome.json", { upward = true })[1] ~= nil
-      if root_has_biome then
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "biome" })
+      -- If you had logic adding biome here, DELETE IT.
+      -- We want to prevent null-ls from attaching to Biome.
+      if opts.handlers then
+        -- This is the "handler" trick, but used correctly:
+        -- we ensure null-ls NEVER tries to run biome, because we use Conform/LSP instead.
+        opts.handlers.biome = function() end
       end
     end,
   },
+
+  -- 3. LSP: Fix Linting Overlap (Red Squiggles)
+  -- This ensures Biome LSP only starts if biome.json exists
+  {
+    "AstroNvim/astrolsp",
+    opts = {
+      config = {
+        biome = {
+          root_dir = require("lspconfig.util").root_pattern("biome.json", "biome.jsonc"),
+        },
+      },
+    },
+  },
+
+  -- 4. CONFORM: Fix Formatting Overlap (Format on Save)
+  -- This ensures Biome only formats if biome.json exists
   {
     "stevearc/conform.nvim",
-    optional = true,
     opts = function(_, opts)
-      local root_has_biome = vim.fs.find("biome.json", { upward = true })[1] ~= nil
-      if not root_has_biome then return end
+      opts.formatters_by_ft = opts.formatters_by_ft or {}
+      opts.formatters = opts.formatters or {}
 
-      if not opts.formatters_by_ft then opts.formatters_by_ft = {} end
-
-      local supported_ft = {
-        "astro",
-        "css",
-        "graphql",
-        "javascript",
-        "javascriptreact",
-        "json",
-        "jsonc",
-        "svelte",
-        "typescript",
-        "typescriptreact",
-        "vue",
+      -- Define Biome with a condition check
+      opts.formatters.biome = {
+        require_cwd = true,
+        condition = function(self, ctx)
+          return vim.fs.find({ "biome.json", "biome.jsonc" }, { path = ctx.filename, upward = true })[1]
+        end,
       }
 
+      -- Add Biome to your filetypes
+      local supported_ft = { "javascript", "typescript", "typescriptreact", "json", "jsonc" }
       for _, ft in ipairs(supported_ft) do
-        opts.formatters_by_ft[ft] = { "biome" }
+        opts.formatters_by_ft[ft] = { "biome", stop_after_first = true }
       end
     end,
   },
