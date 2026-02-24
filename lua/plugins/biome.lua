@@ -45,18 +45,56 @@ return {
       opts.formatters_by_ft = opts.formatters_by_ft or {}
       opts.formatters = opts.formatters or {}
 
+      local function has_formatter(ft)
+        if not ft or ft == "" then return false end
+        local entries = opts.formatters_by_ft[ft]
+        if type(entries) == "table" and next(entries) then return true end
+        for part in ft:gmatch("[^.]+") do
+          entries = opts.formatters_by_ft[part]
+          if type(entries) == "table" and next(entries) then return true end
+        end
+        entries = opts.formatters_by_ft._
+        return type(entries) == "table" and next(entries) ~= nil
+      end
+
+      opts.format_on_save = function(bufnr)
+        local ft = vim.bo[bufnr].filetype
+        if not has_formatter(ft) then return end
+        return {
+          timeout_ms = 500,
+          lsp_format = "never",
+        }
+      end
+
       -- Define Biome with a condition check
+      local function biome_condition(_, ctx)
+        return vim.fs.find({ "biome.json", "biome.jsonc" }, { path = ctx.filename, upward = true })[1]
+      end
+
       opts.formatters.biome = {
         require_cwd = true,
-        condition = function(self, ctx)
-          return vim.fs.find({ "biome.json", "biome.jsonc" }, { path = ctx.filename, upward = true })[1]
-        end,
+        condition = biome_condition,
+      }
+
+      opts.formatters["biome-check"] = {
+        inherit = true,
+        require_cwd = true,
+        condition = biome_condition,
       }
 
       -- Add Biome to your filetypes
-      local supported_ft = { "javascript", "typescript", "typescriptreact", "json", "jsonc" }
-      for _, ft in ipairs(supported_ft) do
-        opts.formatters_by_ft[ft] = { "biome", stop_after_first = true }
+      local format_only = { "json", "jsonc" }
+      for _, ft in ipairs(format_only) do
+        opts.formatters_by_ft[ft] = { "biome" }
+      end
+
+      local organize_imports = { "javascript", "javascriptreact", "typescript", "typescriptreact" }
+      for _, ft in ipairs(organize_imports) do
+        opts.formatters_by_ft[ft] = {
+          "biome-check",
+          "biome",
+          stop_after_first = false,
+        }
       end
     end,
   },
